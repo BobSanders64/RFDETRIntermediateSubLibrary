@@ -25,6 +25,15 @@ from torch import Tensor, nn
 
 from rfdetr.models.ops.modules import MSDeformAttn
 
+try:
+    from xformers.ops import memory_efficient_attention
+    from xformers.ops import SwiGLU
+    XFORMERS_AVAILABLE = True
+    print("XFormers available")
+except ImportError:
+    XFORMERS_AVAILABLE = False
+    print("XFormers not available")
+
 
 class MLP(nn.Module):
     """ Very simple multi-layer perceptron (also called FFN)"""
@@ -136,7 +145,8 @@ class Transformer(nn.Module):
                  num_feature_levels=4, dec_n_points=4,
                  lite_refpoint_refine=False,
                  decoder_norm_type='LN',
-                 bbox_reparam=False):
+                 bbox_reparam=False,
+                 use_xformers=False):
         super().__init__()
         self.encoder = None
 
@@ -145,7 +155,8 @@ class Transformer(nn.Module):
                                                 group_detr=group_detr,
                                                 num_feature_levels=num_feature_levels,
                                                 dec_n_points=dec_n_points,
-                                                skip_self_attn=False,)
+                                                skip_self_attn=False,
+                                                use_xformers=use_xformers,)
         assert decoder_norm_type in ['LN', 'Identity']
         norm = {
             "LN": lambda channels: nn.LayerNorm(channels),
@@ -447,10 +458,20 @@ class TransformerDecoderLayer(nn.Module):
     def __init__(self, d_model, sa_nhead, ca_nhead, dim_feedforward=2048, dropout=0.1,
                  activation="relu", normalize_before=False, group_detr=1,
                  num_feature_levels=4, dec_n_points=4,
-                 skip_self_attn=False):
+                 skip_self_attn=False, use_xformers=False):
         super().__init__()
         # Decoder Self-Attention
-        self.self_attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=sa_nhead, dropout=dropout, batch_first=True)
+        self.use_xformers = use_xformers and XFORMERS_AVAILABLE
+        if self.use_xformers:
+            self.sa_nhead = sa_nhead
+            self.head_dim = d_model // sa_nhead
+            self.sa_q_proj = nn.Linear(d_model, d_model)
+            self.sa_k_proj = nn.Linear(d_model, d_model)
+            self.sa_v_proj = nn.Linear(d_model, d_model)
+            self.sa_out_proj = nn.Linear(d_model, d_model)
+            self.sa_dropout_p = dropout
+        else:
+            self.self_attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=sa_nhead, dropout=dropout, batch_first=True)
         self.dropout1 = nn.Dropout(dropout)
         self.norm1 = nn.LayerNorm(d_model)
 
@@ -503,9 +524,21 @@ class TransformerDecoderLayer(nn.Module):
             k = torch.cat(k.split(num_queries // self.group_detr, dim=1), dim=0)
             v = torch.cat(v.split(num_queries // self.group_detr, dim=1), dim=0)
 
-        tgt2 = self.self_attn(q, k, v, attn_mask=tgt_mask,
-                            key_padding_mask=tgt_key_padding_mask,
-                            need_weights=False)[0]
+        if self.use_xformers:
+            B, N, C = q.shape
+            q_proj = self.sa_q_proj(q).reshape(B, N, self.sa_nhead, self.head_dim)
+            k_proj = self.sa_k_proj(k).reshape(B, N, self.sa_nhead, self.head_dim)
+            v_proj = self.sa_v_proj(v).reshape(B, N, self.sa_nhead, self.head_dim)
+            tgt2 = memory_efficient_attention(
+                q_proj, k_proj, v_proj,
+                p=self.sa_dropout_p if self.training else 0.0,
+            )
+            tgt2 = tgt2.reshape(B, N, C)
+            tgt2 = self.sa_out_proj(tgt2)
+        else:
+            tgt2 = self.self_attn(q, k, v, attn_mask=tgt_mask,
+                                key_padding_mask=tgt_key_padding_mask,
+                                need_weights=False)[0]
 
         if self.training:
             tgt2 = torch.cat(tgt2.split(bs, dim=0), dim=1)
@@ -561,6 +594,8 @@ def build_transformer(args):
     except:
         two_stage = False
 
+    use_xformers = getattr(args, 'attn_implementation', 'sdpa') == 'xformers'
+
     return Transformer(
         d_model=args.hidden_dim,
         sa_nhead=args.sa_nheads,
@@ -577,6 +612,7 @@ def build_transformer(args):
         lite_refpoint_refine=args.lite_refpoint_refine,
         decoder_norm_type=args.decoder_norm,
         bbox_reparam=args.bbox_reparam,
+        use_xformers=use_xformers,
     )
 
 

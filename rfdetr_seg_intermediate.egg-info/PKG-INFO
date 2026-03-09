@@ -1,12 +1,15 @@
 Metadata-Version: 2.4
 Name: rfdetr-seg-intermediate
-Version: 0.3.0
+Version: 0.3.1
 Summary: Memory-efficient RF-DETR with RFDETRSegIntermediate and xformers attention support
 Author: Nathan Honn
 License: Apache License 2.0
+Project-URL: GitHub, https://github.com/BobSanders64/RFDETRIntermediateSubLibrary
+Project-URL: PyPI, https://pypi.org/project/rfdetr-seg-intermediate/#description
 Keywords: machine-learning,deep-learning,vision,ML,DL,AI,DETR,RF-DETR
 Requires-Python: ==3.12.*
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: accelerate>=1.12.0
 Requires-Dist: Cython>=3.0.11
 Requires-Dist: huggingface_hub>=1.4.1
@@ -36,26 +39,38 @@ Requires-Dist: torch==2.10.0
 Requires-Dist: torchvision>=0.25.0
 Requires-Dist: tqdm==4.67.3
 Requires-Dist: transformers==5.0.0
-Requires-Dist: triton==3.0.0
+Requires-Dist: triton>=3.0.0
 Requires-Dist: xformers>=0.0.35
+Dynamic: license-file
+
+# RFDETRSegIntermediate
+### ***A Memory Efficient RFDETR Model***
 
 This is a package I made to allow for a intermediate RFDETR model, one that uses memory efficent xformers package to train and requires significantly less memory. It is called, RFDETRSegIntermediate.
 
 On my local machine, it allowed me to train something that would have taken 16GB into about 8GB of VRAM.
 
-IF YOUR ON WINDOWS PLEASE RUN THE FOLLOWING COMMAND IN YOUR CMD PROMPT (preferably BEFORE downloading the package):
+This has 2 fairly different versions of installation. One on Windows and the other on Linux:
+
+### Windows Installation: 
+#### Run these BEFORE downloading the package:
 ```
 pip install https://huggingface.co/madbuda/triton-windows-builds/resolve/main/triton-3.0.0-cp312-cp312-win_amd64.whl 
 pip3 install -U xformers --index-url https://download.pytorch.org/whl/cu128
 ```
-otherwise, install triton and xformers by:
+Then 
+```
+pip3 install rfdetr-seg-intermediate
+```
+
+### Linux Installation:
 ```
 pip3 install triton
 pip3 install -U xformers --index-url https://download.pytorch.org/whl/cu128
 ```
-if your not on cuda you can simply install xformers by:
+Then 
 ```
-pip3 install xformers
+pip3 install rfdetr-seg-intermediate
 ```
 
 Troubleshooting (how it runs on my local Windows machine):
@@ -76,3 +91,8 @@ Honestly, the most critical libraries are the Hugging Face version of Triton and
 ### Other Notes:
 - Install all packages EXACTLY as the pyproject.toml wants it to be.
 - If for some reason it reinstalls pytorch as the CPU version, install the CUDA version instead if you wish. Just make sure its torch 2.10.0
+- If you're having issues, clone this repo and run `pip install -r requirements.txt` to install the exact dependency versions tested with this package.
+
+### Links:
+- **GitHub** = [Github Repo Link](https://github.com/BobSanders64/RFDETRIntermediateSubLibrary)
+- **PyPI** = [PyPi Repo](https://pypi.org/project/rfdetr-seg-intermediate/#description)
