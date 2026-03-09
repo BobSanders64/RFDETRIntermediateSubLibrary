@@ -1,3 +1,4 @@
+LICENSE
 README.md
 pyproject.toml
 rfdetr/__init__.py
