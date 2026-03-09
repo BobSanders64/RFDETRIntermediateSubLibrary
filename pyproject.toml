@@ -12,6 +12,10 @@ license = {text = "Apache License 2.0"}
 readme = "README.md"
 keywords = ["machine-learning", "deep-learning", "vision", "ML", "DL", "AI", "DETR", "RF-DETR"]
 
+[project.urls]
+GitHub = "https://github.com/BobSanders64/RFDETRIntermediateSubLibrary"
+PyPI = "https://pypi.org/project/rfdetr-seg-intermediate/#description"
+
 dependencies = [
     "accelerate>=1.12.0",
     "Cython>=3.0.11",

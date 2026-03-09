@@ -1,3 +1,6 @@
+# RFDETRSegIntermediate
+### ***A Memory Efficient RFDETR Model***
+
 This is a package I made to allow for a intermediate RFDETR model, one that uses memory efficent xformers package to train and requires significantly less memory. It is called, RFDETRSegIntermediate.
 
 On my local machine, it allowed me to train something that would have taken 16GB into about 8GB of VRAM.
@@ -20,6 +23,10 @@ pip3 install rfdetr-seg-intermediate
 pip3 install triton==3.0.0
 pip3 install -U xformers --index-url https://download.pytorch.org/whl/cu128
 ```
+Then 
+```
+pip3 install rfdetr-seg-intermediate
+```
 
 Troubleshooting (how it runs on my local Windows machine):
 ```
@@ -39,3 +46,8 @@ Honestly, the most critical libraries are the Hugging Face version of Triton and
 ### Other Notes:
 - Install all packages EXACTLY as the pyproject.toml wants it to be.
 - If for some reason it reinstalls pytorch as the CPU version, install the CUDA version instead if you wish. Just make sure its torch 2.10.0
+- If you're having issues, clone this repo and run `pip install -r requirements.txt` to install the exact dependency versions tested with this package.
+
+### Links:
+- **GitHub** = [Github Repo Link](https://github.com/BobSanders64/RFDETRIntermediateSubLibrary)
+- **PyPI** = [PyPi Repo](https://pypi.org/project/rfdetr-seg-intermediate/#description)
