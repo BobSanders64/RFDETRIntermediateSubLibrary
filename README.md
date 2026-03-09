@@ -20,7 +20,7 @@ pip3 install rfdetr-seg-intermediate
 
 ### Linux Installation:
 ```
-pip3 install triton==3.0.0
+pip3 install triton
 pip3 install -U xformers --index-url https://download.pytorch.org/whl/cu128
 ```
 Then 
